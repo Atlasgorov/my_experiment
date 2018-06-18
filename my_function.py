@@ -245,6 +245,7 @@ def k_core_method(subGraph,k_core_dict, K,source_nodes,rumor_community_label0, s
     else:
         print('进入循环删除最大核数节点的过程')
     G1.remove_nodes_from(set(G1) - all_reachable_nodes_from_sources - source_nodes)  # 从G1中删除所有源节点不可达的节点
+    candidates_nodes_list = [x for x in candidates_nodes_list if x in all_reachable_nodes_from_sources]  # 新的候选节点列表
     number_of_infected_nodes = independent_cascade_propagation(G1, source_nodes, IC_simulation_num_k_core)  # 原始的影响力——>平均受影响的节点总数
     while number_of_infected_nodes > K:  # 当源节点集合的影响力大于预定的k值时，循环删除核数最大的节点
         target_node = candidates_nodes_list.pop()  # 选择核数最大的节点作为待封锁的节点,pop方法默认弹出列表的最后一个元素
@@ -293,6 +294,7 @@ def max_degree_method(subGraph, all_degree_dict,K, source_nodes, rumor_community
     else:
         print('进入循环删除最大度节点的过程')
     G1.remove_nodes_from(set(G1) - all_reachable_nodes_from_sources - source_nodes)  # 从G1中删除所有源节点不可达的节点
+    candidates_nodes_list = [x for x in candidates_nodes_list if x in all_reachable_nodes_from_sources]  # 新的候选节点列表
     number_of_infected_nodes = independent_cascade_propagation(G1, source_nodes, IC_simulation_num_max_degree)  # 原始的影响力——>平均受影响的节点总数
     while number_of_infected_nodes > K:  # 当源节点集合的影响力大于预定的k值时，循环删除度数最大的节点
         target_node = candidates_nodes_list.pop()  # 选择度数最大的节点作为待封锁的节点,pop方法默认弹出列表的最后一个元素
@@ -303,6 +305,55 @@ def max_degree_method(subGraph, all_degree_dict,K, source_nodes, rumor_community
     number_of_blocked_nodes = M0_length + blocked_nodes_length
     #print('除了特殊桥节点，max_degree需要封锁的节点为：', blocked_nodes)
     print('此次maxDegree method方法结束')
+    return number_of_blocked_nodes
+
+
+def betweenness_centrality_method(subGraph, all_betweenness_centrality_dict,K, source_nodes, rumor_community_label0, special_bridges,M0_length, IC_simulation_num_betweenness_centrality):
+    """
+    与k核方法类似，只不过删除节点的指标变成了节点的度数,删除A集合中度数(入度加出度)最大的节点。
+    :param subGraph:原始网络图G的子图G1
+    :param all_betweenness_centrality_dict:子图的介数中心性字典
+    :param K:K是预定的谣言抑制要求，在IC过程结束之后，受到谣言影响的节点总量不超过K。
+    :param source_nodes:谣言源节点集合
+    :param rumor_community_label0:谣言社区的编号
+    :param M0_length: 父节点中存在谣言源节点的桥节点的总数
+    :param IC_simulation_num_betweenness_centrality: 为了获得一次IC传播模型的期望(平均)结果所作的总的模拟次数
+    :return:需要封锁的节点总数量——> M0的数量加上这个方法需要删除的节点数量
+    """
+    print('进入介数中心度算法')
+    G1 = subGraph.copy()
+    G1.remove_nodes_from(special_bridges)
+    betweenness_centrality_dict = dict().fromkeys(set(G1) - source_nodes)  # 是子图G1的所有谣言可达节点的介数中心性字典，键是节点名，值是它的介数
+    for node in betweenness_centrality_dict:
+        betweenness_centrality_dict[node] = all_betweenness_centrality_dict[node]
+    candidates_nodes_list = [x for x, y in sorted(betweenness_centrality_dict.items(), key=lambda x:x[1])]  # 按照介数的大小令节点升序排列，列表末尾的节点介数最大
+    blocked_nodes = list()  # 存放选出的封锁节点
+    bridges_can_be_reached = bfs_2(G1, source_nodes, rumor_community_label0)
+    while bridges_can_be_reached:
+        target_node = candidates_nodes_list.pop()  # 选择度数最大的节点作为待封锁的节点,pop方法默认弹出列表的最后一个元素
+        G1.remove_node(target_node)  # 删除目标节点
+        blocked_nodes.append(target_node)  # 记录目标节点
+        bridges_can_be_reached = bfs_2(G1, source_nodes, rumor_community_label0)
+    all_reachable_nodes_from_sources = bfs_1(G1, source_nodes)  # 新的所有的谣言源可达节点集合
+    blocked_nodes_length = len(blocked_nodes)
+    if len(all_reachable_nodes_from_sources) <= K:  # 若保护了所有的桥节点之后，源节点出发的可达节点数量小于K，那么显然源节点的影响力不会超过K
+        number_of_blocked_nodes = M0_length + blocked_nodes_length
+        #print('除了特殊桥节点，max_degree需要封锁的节点为：', blocked_nodes)
+        return number_of_blocked_nodes
+    else:
+        print('进入循环删除最大介数的节点阶段')
+    G1.remove_nodes_from(set(G1) - all_reachable_nodes_from_sources - source_nodes)  # 从G1中删除所有源节点不可达的节点
+    candidates_nodes_list = [x for x in candidates_nodes_list if x in all_reachable_nodes_from_sources] # 新的候选节点列表
+    number_of_infected_nodes = independent_cascade_propagation(G1, source_nodes, IC_simulation_num_betweenness_centrality)  # 原始的影响力——>平均受影响的节点总数
+    while number_of_infected_nodes > K:  # 当源节点集合的影响力大于预定的k值时，循环删除度数最大的节点
+        target_node = candidates_nodes_list.pop()  # 选择度数最大的节点作为待封锁的节点,pop方法默认弹出列表的最后一个元素
+        G1.remove_node(target_node)  # 删除目标节点
+        blocked_nodes.append(target_node)  # 记录目标节点
+        number_of_infected_nodes = independent_cascade_propagation(G1, source_nodes, IC_simulation_num_betweenness_centrality)
+    blocked_nodes_length = len(blocked_nodes)
+    number_of_blocked_nodes = M0_length + blocked_nodes_length
+    #print('除了特殊桥节点，max_degree需要封锁的节点为：', blocked_nodes)
+    print('此次betweenness_centrality method方法结束')
     return number_of_blocked_nodes
 
 

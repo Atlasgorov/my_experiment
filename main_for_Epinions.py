@@ -22,6 +22,8 @@ def experiment_on_Epinions():
     my_result = list()
     k_core_result = list()
     max_degree_result = list()
+    betweenness_centrality_result = list()
+
     # 三种节点数量的结果列表
     num_of_reachable_nodes_from_sources = list()  # 谣言社区内部谣言可达的节点数量
     num_of_common_bridges = list()  # 普通桥节点的数量
@@ -41,6 +43,8 @@ def experiment_on_Epinions():
     my_running_time = list()
     k_core_running_time = list()
     max_degree_running_time = list()
+    betweenness_centrality_running_time = list()
+
 
     while simulation_count < simulation_num:
         # 预处理步骤，得到子图G1
@@ -82,24 +86,44 @@ def experiment_on_Epinions():
             basic_running_time + max_degree_end_time - max_degree_start_time)  # maxDegree方法所需时间
         print('maxDegree方法所用的时间:', max_degree_running_time[-1])
 
+        # 介数中心度算法
+        betweenness_centrality_start_time = time.clock()  # 介数中心度算法开始时间
+        # 介数中心度字典
+        all_betweenness_centrality_dict = nx.betweenness_centrality(G1)
+        betweenness_centrality_result.append(
+            mf.betweenness_centrality_method(G1, all_betweenness_centrality_dict, k, rumor_originators,
+                                             rumor_community_label, M0, Length_M0, 10))
+        betweenness_centrality_end_time = time.clock()  # 介数中心度算法结束时间
+        betweenness_centrality_running_time.append(
+            basic_running_time + betweenness_centrality_end_time - betweenness_centrality_start_time)  # 介数中心度算法所需时间
+        print('betweenness_centrality方法所用的时间:', betweenness_centrality_running_time[-1])
+
         simulation_count += 1  # 三个算法都运行一次之后，仿真次数增加1次
         print('现在的仿真次数是：', simulation_count)
+
+
 
     # 将所有的结果转化为numpy矩阵，便于存储和处理
     my_final_result = np.array(my_result).T  # 每一列是一种谣言源规模对应的结果,矩阵有simulation_num行，10列
     k_core_result = np.array(k_core_result).T  # 每一列是一种谣言源规模对应的结果,矩阵有simulation_num行，10列
     max_degree_result = np.array(max_degree_result).T  # 每一列是一种谣言源规模对应的结果,矩阵有simulation_num行，10列
+    betweenness_centrality_result = np.array(betweenness_centrality_result).T  # 每一列是一种谣言源规模对应的结果,矩阵有simulation_num行，10列
+
     num_of_reachable_nodes_from_sources = np.array(num_of_reachable_nodes_from_sources).T  # ,矩阵有simulation_num行，10列
     num_of_common_bridges = np.array(num_of_common_bridges).T  # 矩阵有simulation_num行，10列
     num_of_special_bridges = np.array(num_of_special_bridges).T  # 矩阵有simulation_num行，10列
     run_time_my_method = np.array(my_running_time).T  # 每一列是一个谣言规模每次仿真所需的运行时间，单位是秒
     run_time_k_core = np.array(k_core_running_time).T  # 每一列是一个谣言规模每次仿真所需的运行时间，单位是秒
     run_time_max_degree = np.array(max_degree_running_time).T  # 每一列是一个谣言规模每次仿真所需的运行时间，单位是秒
+    run_time_betweenness_centrality = np.array(betweenness_centrality_running_time).T  # 每一列是一个谣言规模每次仿真所需的运行时间，单位是秒
+
 
     # 平均结果
     my_final_average_result = (my_final_result.mean(axis=0)).astype(int)  # 按每列求均值,且取整
     k_core_average_result = (k_core_result.mean(axis=0)).astype(int)  # 按每列求均值,且取整
     max_degree_average_result = (max_degree_result.mean(axis=0)).astype(int)  # 按每列求均值,且取整
+    betweenness_centrality_average_result = (betweenness_centrality_result.mean(axis=0)).astype(int)  # 按每列求均值,且取整
+
     average_num_of_reachable_nodes_from_sources = (num_of_reachable_nodes_from_sources.mean(axis=0)).astype(
         int)  # 按每列求均值,且取整
     average_num_of_common_bridges = (num_of_common_bridges.mean(axis=0)).astype(int)  # 按每列求均值,且取整
@@ -107,11 +131,15 @@ def experiment_on_Epinions():
     average_run_time_my_method = (run_time_my_method.mean(axis=0))
     average_run_time_k_core = (run_time_k_core.mean(axis=0))
     average_run_time_max_degree = (run_time_max_degree.mean(axis=0))
+    average_run_time_betweenness_centrality = (run_time_betweenness_centrality.mean(axis=0))
+
 
     # 给最终的结果矩阵添加首行和尾行，首行是谣言源节点的规模，尾行是每一列的平均结果
     my_final_result = np.concatenate(([rumor_sources_number], my_final_result, [my_final_average_result]))
     k_core_result = np.concatenate(([rumor_sources_number], k_core_result, [k_core_average_result]))
     max_degree_result = np.concatenate(([rumor_sources_number], max_degree_result, [max_degree_average_result]))
+    betweenness_centrality_result = np.concatenate(
+        ([rumor_sources_number], betweenness_centrality_result, [betweenness_centrality_average_result]))
     num_of_reachable_nodes_from_sources = np.concatenate(
         ([rumor_sources_number], num_of_reachable_nodes_from_sources, [average_num_of_reachable_nodes_from_sources]))
     num_of_common_bridges = np.concatenate(
@@ -121,6 +149,8 @@ def experiment_on_Epinions():
     run_time_my_method = np.concatenate(([rumor_sources_number], run_time_my_method, [average_run_time_my_method]))
     run_time_k_core = np.concatenate(([rumor_sources_number], run_time_k_core, [average_run_time_k_core]))
     run_time_max_degree = np.concatenate(([rumor_sources_number], run_time_max_degree, [average_run_time_max_degree]))
+    run_time_betweenness_centrality = np.concatenate(
+        ([rumor_sources_number], run_time_betweenness_centrality, [average_run_time_betweenness_centrality]))
 
     # 存储总的结果
     data_header = "the first line denotes the number of rumor sources.\n" \
@@ -133,6 +163,8 @@ def experiment_on_Epinions():
                fmt="%d")
     np.savetxt(r'./experiment_results/Epinions/max_degree_result.csv', max_degree_result, delimiter=',',
                header=data_header, fmt="%d")
+    np.savetxt(r'./experiment_results/Epinions/betweenness_centrality_result.csv', betweenness_centrality_result, delimiter=',',header=data_header,fmt="%d")
+
     np.savetxt(r'./experiment_results/Epinions/num_of_reachable_nodes_from_sources.csv',
                num_of_reachable_nodes_from_sources, delimiter=',', header=data_header, fmt="%d")
     np.savetxt(r'./experiment_results/Epinions/num_of_common_bridges.csv', num_of_common_bridges, delimiter=',',
@@ -145,6 +177,10 @@ def experiment_on_Epinions():
                header=data_header)
     np.savetxt(r'./experiment_results/Epinions/run_time_max_degree.csv', run_time_max_degree, delimiter=',',
                header=data_header)
+    np.savetxt(r'./experiment_results/Epinions/run_time_betweenness_centrality.csv', run_time_betweenness_centrality,
+               delimiter=',',
+               header=data_header)
+    """
     # 打印平均结果
     print("my results:", my_final_average_result)
     print("k-core results:", k_core_average_result)
@@ -155,7 +191,7 @@ def experiment_on_Epinions():
     print('average run time of my method:', average_run_time_my_method)
     print('average run time of k-core method:', average_run_time_k_core)
     print('average run time of maxDegree:', average_run_time_max_degree)
-
+    """
     """
     # 绘图查看平均结果
     x_axis = all_rumor_sources_number # 横轴是谣言源节点的数量
