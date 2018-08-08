@@ -1,0 +1,45 @@
+******************************************************
+for 70 rumor sources
+my results:516
+k-core results:2153
+max degree results:1971
+bc results:1630
+average |A| :1156
+average |B0|:2022
+average |M0|:107
+average run time of my method:82.53468628484234
+average run time of K-core method:3.4365761099269143
+average run time of MaxDegree:3.443306210193829
+average run time of BC method:77.4115762430325
+******************************************************
+
+******************************************************
+for 99 rumor sources
+my results:511
+k-core results:2216
+max degree results:2033
+bc results:1701
+average |A| :1175
+average |B0|:2054
+average |M0|:105
+average run time of my method:22.258885501889655
+average run time of K-core method:3.0870956262979417
+average run time of MaxDegree:3.0724731482375502
+average run time of BC method:73.17693132666082
+******************************************************
+
+******************************************************
+for 127 rumor sources
+my results:644
+k-core results:2285
+max degree results:2105
+bc results:1800
+average |A| :1199
+average |B0|:2023
+average |M0|:168
+average run time of my method:76.98555117178479
+average run time of K-core method:3.115042657589147
+average run time of MaxDegree:3.121804721417466
+average run time of BC method:75.65762832923377
+******************************************************
+
